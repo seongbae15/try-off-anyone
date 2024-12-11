@@ -1,0 +1,16 @@
+torch
+safetensors
+tqdm
+diffusers
+pillow
+numpy
+requests
+datasets
+transformers
+opencv-python
+torchvision
+psutil
+scipy
+setuptools
+torchmetrics
+torch-fidelity
