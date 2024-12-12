@@ -52,7 +52,15 @@ python3 main.py --test
 ### Citation
 If you find this repository useful in your research, please consider giving a star ⭐ and a citation:
 ```
-
+@misc{xarchakos2024tryoffanyonetiledclothgeneration,
+      title={TryOffAnyone: Tiled Cloth Generation from a Dressed Person}, 
+      author={Ioannis Xarchakos and Theodoros Koukopoulos},
+      year={2024},
+      eprint={2412.08573},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2412.08573}, 
+}
 ```
 
 [logo-hf_models]: https://img.shields.io/badge/🤗-Models-blue.svg?style=plastic
