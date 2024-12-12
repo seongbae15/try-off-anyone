@@ -60,4 +60,4 @@ If you find this repository useful in your research, please consider giving a st
 [logo-paper]: https://img.shields.io/badge/arXiv-Paper-b31b1b.svg?style=plastic
 [hf_datasets]: https://huggingface.co/datasets/rizavelioglu/...
 [hf_models]: https://huggingface.co/ixarchakos/tryOffAnyone
-[paper-arxiv]: https://arxiv.org/
+[paper-arxiv]: https://arxiv.org/pdf/2412.08573
