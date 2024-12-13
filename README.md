@@ -1,5 +1,7 @@
 # TryOffAnyone
 
+![teaser.png](references/teaser.png)
+
 The official repository of the paper: _"TryOffAnyone: Tiled Cloth Generation from a Dressed Person"_.
 
 [![arXiv][logo-paper]][paper-arxiv]
