@@ -19,7 +19,7 @@ def background_removal(image):
 
 
 def mask_generation(image, processor, model, category):
-    inputs = processor(images=image, return_tensors="pt").to(device)
+    inputs = processor(images=image, return_tensors="pt").to(device if device == 'cuda' else 'cpu')
     outputs = model(**inputs)
     logits = outputs.logits.cpu()
 

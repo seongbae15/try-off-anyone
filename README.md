@@ -23,6 +23,12 @@ in `"try-off-anyone/ckpt/"`
 
 The provided model only works for upper clothes similar to the ones in VITON-HD
 
+### Mac Users
+Change in config.py
+```
+device = 'mps'
+```
+
 ### Inference
 Execute TryOffAnyone on any image url
 ```

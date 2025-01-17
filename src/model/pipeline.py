@@ -10,18 +10,18 @@ import torch
 def fine_tuned_modules(unet):
     trainable_modules = torch.nn.ModuleList()
     for blocks in [unet.down_blocks, unet.mid_block, unet.up_blocks]:
-        if hasattr(blocks, "attentions"):
+        if hasattr(blocks, 'attentions'):
             trainable_modules.append(blocks.attentions)
         else:
             for block in blocks:
-                if hasattr(block, "attentions"):
+                if hasattr(block, 'attentions'):
                     trainable_modules.append(block.attentions)
     return trainable_modules
 
 
 def skip_cross_attentions(unet):
     attn_processors = {
-        name: unet.attn_processors[name] if name.endswith("attn1.processor") else Skip()
+        name: unet.attn_processors[name] if name.endswith('attn1.processor') else Skip()
         for name in unet.attn_processors.keys()
     }
     return attn_processors
@@ -35,19 +35,19 @@ def encode(image, vae):
 
 class TryOffAnyone:
     def __init__(self):
-        self.noise_scheduler = DDIMScheduler.from_pretrained(base_ckpt, subfolder="scheduler")
-        vae = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-mse").to(device, dtype=dtype)
+        self.noise_scheduler = DDIMScheduler.from_pretrained(base_ckpt, subfolder='scheduler')
+        vae = AutoencoderKL.from_pretrained('stabilityai/sd-vae-ft-mse').to(device, dtype=dtype)
         unet = UNet2DConditionModel.from_pretrained(
-            base_ckpt, subfolder="unet"
+            base_ckpt, subfolder='unet'
         ).to(device, dtype=dtype)
 
         unet.set_attn_processor(skip_cross_attentions(unet))
         load_checkpoint_in_model(fine_tuned_modules(unet), 'ckpt')
 
-        self.unet = torch.compile(unet)
-        self.vae = torch.compile(vae, mode="reduce-overhead")
+        self.unet = torch.compile(unet, backend='aot_eager' if device == 'mps' else 'inductor')
+        self.vae = torch.compile(vae, mode='reduce-overhead')
 
-        torch.set_float32_matmul_precision("high")
+        torch.set_float32_matmul_precision('high')
         torch.backends.cuda.matmul.allow_tf32 = True
 
     @torch.no_grad()
@@ -59,7 +59,7 @@ class TryOffAnyone:
 
         masked_latent = encode(masked_image, self.vae)
         image_latent = encode(image, self.vae)
-        mask = torch.nn.functional.interpolate(mask, size=masked_latent.shape[-2:], mode="nearest")
+        mask = torch.nn.functional.interpolate(mask, size=masked_latent.shape[-2:], mode='nearest')
 
         masked_latent_concat = torch.cat([masked_latent, image_latent], dim=concat_d)
         mask_concat = torch.cat([mask, torch.zeros_like(mask)], dim=concat_d)

@@ -45,7 +45,7 @@ def test_image():
     pipeline = TryOffAnyone()
     processor = SegformerImageProcessor.from_pretrained("sayeed99/segformer_b3_clothes")
     model = AutoModelForSemanticSegmentation.from_pretrained("sayeed99/segformer_b3_clothes")
-    model.to(device)
+    model.to(device if device == 'cuda' else 'cpu')
     mask_processor = VaeImageProcessor(
         vae_scale_factor=8, do_normalize=False, do_binarize=True, do_convert_grayscale=True
     )
