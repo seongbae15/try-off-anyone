@@ -6,7 +6,7 @@ The official repository of the paper: _"TryOffAnyone: Tiled Cloth Generation fro
 
 [![arXiv][logo-paper]][paper-arxiv]
 [![Generic badge][logo-hf_models]][hf_models]
-
+[![Generic badge][logo-hf_spaces]][hf_spaces]
 
 ### Install
 Clone the repository, install the required packages:
@@ -75,5 +75,6 @@ If you find this repository useful in your research, please consider giving a st
 [logo-hf_spaces]: https://img.shields.io/badge/🤗-Demo-blue.svg?style=plastic
 [logo-paper]: https://img.shields.io/badge/arXiv-Paper-b31b1b.svg?style=plastic
 [hf_datasets]: https://huggingface.co/datasets/rizavelioglu/...
+[hf_spaces]: https://huggingface.co/spaces/ixarchakos/TryOffAnyone
 [hf_models]: https://huggingface.co/ixarchakos/tryOffAnyone
 [paper-arxiv]: https://arxiv.org/pdf/2412.08573
