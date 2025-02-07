@@ -60,10 +60,10 @@ python3 main.py --test
 ### Citation
 If you find this repository useful in your research, please consider giving a star ⭐ and a citation:
 ```
-@misc{xarchakos2024tryoffanyonetiledclothgeneration,
+@misc{xarchakos2025tryoffanyonetiledclothgeneration,
       title={TryOffAnyone: Tiled Cloth Generation from a Dressed Person}, 
       author={Ioannis Xarchakos and Theodoros Koukopoulos},
-      year={2024},
+      year={2025},
       eprint={2412.08573},
       archivePrefix={arXiv},
       primaryClass={cs.CV},
