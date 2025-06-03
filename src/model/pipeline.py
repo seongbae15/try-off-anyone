@@ -49,7 +49,8 @@ class TryOffAnyone:
             base_ckpt, subfolder="scheduler"
         )
         # self.noise_scheduler = DPMSolverMultistepScheduler.from_pretrained(
-        #     base_ckpt, subfolder="scheduler"
+        #     base_ckpt,
+        #     subfolder="scheduler",
         # )
         print(self.noise_scheduler)
         vae = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-mse").to(
@@ -110,6 +111,7 @@ class TryOffAnyone:
             mask_concat = torch.cat([mask_concat] * 2)
 
         extra_step = {"generator": generator, "eta": 1.0}
+        # extra_step = {"generator": generator}
         for i, t in enumerate(timesteps):
             input_latents = (
                 torch.cat([latents] * 2) if do_classifier_free_guidance else latents
