@@ -1,4 +1,4 @@
-from src.test_vton import test_vton
+# from src.test_vton import test_vton
 from src.inference import test_image
 import argparse
 
@@ -12,11 +12,11 @@ def terminal_args():
 
 def main():
     args = terminal_args()
-    if args.test:
-        test_vton()
-    elif args.inference:
-        test_image()
+    # if args.test:
+    #     test_vton()
+    # args.inference:
+    test_image()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

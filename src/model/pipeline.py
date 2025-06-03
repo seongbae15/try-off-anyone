@@ -1,56 +1,77 @@
 from accelerate import load_checkpoint_in_model
-from diffusers import AutoencoderKL, DDIMScheduler, UNet2DConditionModel
+from diffusers import (
+    AutoencoderKL,
+    DDIMScheduler,
+    UNet2DConditionModel,
+    DPMSolverMultistepScheduler,
+)
 from diffusers.utils.torch_utils import randn_tensor
 from config import dtype, device, concat_d, base_ckpt
 from src.model.attention import Skip
 from src.preprocessing import convert_to_pil, prepare_image, prepare_mask_image
 import torch
+from line_profiler import profile
 
 
 def fine_tuned_modules(unet):
     trainable_modules = torch.nn.ModuleList()
     for blocks in [unet.down_blocks, unet.mid_block, unet.up_blocks]:
-        if hasattr(blocks, 'attentions'):
+        if hasattr(blocks, "attentions"):
             trainable_modules.append(blocks.attentions)
         else:
             for block in blocks:
-                if hasattr(block, 'attentions'):
+                if hasattr(block, "attentions"):
                     trainable_modules.append(block.attentions)
     return trainable_modules
 
 
 def skip_cross_attentions(unet):
     attn_processors = {
-        name: unet.attn_processors[name] if name.endswith('attn1.processor') else Skip()
+        name: unet.attn_processors[name] if name.endswith("attn1.processor") else Skip()
         for name in unet.attn_processors.keys()
     }
     return attn_processors
 
 
 def encode(image, vae):
-    image = image.to(memory_format=torch.contiguous_format).float().to(vae.device, dtype=vae.dtype)
+    image = (
+        image.to(memory_format=torch.contiguous_format)
+        .float()
+        .to(vae.device, dtype=vae.dtype)
+    )
     with torch.no_grad():
         return vae.encode(image).latent_dist.sample() * vae.config.scaling_factor
 
 
 class TryOffAnyone:
     def __init__(self):
-        self.noise_scheduler = DDIMScheduler.from_pretrained(base_ckpt, subfolder='scheduler')
-        vae = AutoencoderKL.from_pretrained('stabilityai/sd-vae-ft-mse').to(device, dtype=dtype)
-        unet = UNet2DConditionModel.from_pretrained(
-            base_ckpt, subfolder='unet'
-        ).to(device, dtype=dtype)
+        self.noise_scheduler = DDIMScheduler.from_pretrained(
+            base_ckpt, subfolder="scheduler"
+        )
+        # self.noise_scheduler = DPMSolverMultistepScheduler.from_pretrained(
+        #     base_ckpt, subfolder="scheduler"
+        # )
+        print(self.noise_scheduler)
+        vae = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-mse").to(
+            device, dtype=dtype
+        )
+        unet = UNet2DConditionModel.from_pretrained(base_ckpt, subfolder="unet").to(
+            device, dtype=dtype
+        )
 
         unet.set_attn_processor(skip_cross_attentions(unet))
-        load_checkpoint_in_model(fine_tuned_modules(unet), 'ckpt')
+        load_checkpoint_in_model(fine_tuned_modules(unet), "ckpt")
 
-        self.unet = torch.compile(unet, backend='aot_eager' if device == 'mps' else 'inductor')
-        self.vae = torch.compile(vae, mode='reduce-overhead')
+        self.unet = torch.compile(
+            unet, backend="aot_eager" if device == "mps" else "inductor"
+        )
+        self.vae = torch.compile(vae, mode="reduce-overhead")
 
-        torch.set_float32_matmul_precision('high')
+        torch.set_float32_matmul_precision("high")
         torch.backends.cuda.matmul.allow_tf32 = True
 
     @torch.no_grad()
+    @profile
     def __call__(self, image, mask, inference_steps, scale, height, width, generator):
 
         image = prepare_image(image).to(device, dtype=dtype)
@@ -59,7 +80,9 @@ class TryOffAnyone:
 
         masked_latent = encode(masked_image, self.vae)
         image_latent = encode(image, self.vae)
-        mask = torch.nn.functional.interpolate(mask, size=masked_latent.shape[-2:], mode='nearest')
+        mask = torch.nn.functional.interpolate(
+            mask, size=masked_latent.shape[-2:], mode="nearest"
+        )
 
         masked_latent_concat = torch.cat([masked_latent, image_latent], dim=concat_d)
         mask_concat = torch.cat([mask, torch.zeros_like(mask)], dim=concat_d)
@@ -77,19 +100,25 @@ class TryOffAnyone:
         if do_classifier_free_guidance := (scale > 1.0):
             masked_latent_concat = torch.cat(
                 [
-                    torch.cat([masked_latent, torch.zeros_like(image_latent)], dim=concat_d),
+                    torch.cat(
+                        [masked_latent, torch.zeros_like(image_latent)], dim=concat_d
+                    ),
                     masked_latent_concat,
                 ]
             )
 
             mask_concat = torch.cat([mask_concat] * 2)
 
-        extra_step = {'generator': generator, 'eta': 1.0}
+        extra_step = {"generator": generator, "eta": 1.0}
         for i, t in enumerate(timesteps):
-            input_latents = (torch.cat([latents] * 2) if do_classifier_free_guidance else latents)
+            input_latents = (
+                torch.cat([latents] * 2) if do_classifier_free_guidance else latents
+            )
             input_latents = self.noise_scheduler.scale_model_input(input_latents, t)
 
-            input_latents = torch.cat([input_latents, mask_concat, masked_latent_concat], dim=1)
+            input_latents = torch.cat(
+                [input_latents, mask_concat, masked_latent_concat], dim=1
+            )
 
             noise_pred = self.unet(
                 input_latents,
@@ -102,7 +131,9 @@ class TryOffAnyone:
                 noise_pred_unc, noise_pred_text = noise_pred.chunk(2)
                 noise_pred = noise_pred_unc + scale * (noise_pred_text - noise_pred_unc)
 
-            latents = self.noise_scheduler.step(noise_pred, t, latents, **extra_step).prev_sample
+            latents = self.noise_scheduler.step(
+                noise_pred, t, latents, **extra_step
+            ).prev_sample
 
         latents = latents.split(latents.shape[concat_d] // 2, dim=concat_d)[0]
         latents = 1 / self.vae.config.scaling_factor * latents
