@@ -183,3 +183,5 @@ data
 
 # Checkpoints
 ckpt
+*.ckpt
+stable-diffusion-v1-5
