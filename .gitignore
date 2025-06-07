@@ -183,5 +183,9 @@ data
 
 # Checkpoints
 ckpt
+ckpt_save
 *.ckpt
 stable-diffusion-v1-5
+
+# Log
+logs

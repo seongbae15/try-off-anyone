@@ -1,6 +1,7 @@
 import torch
 
 TEST_DATA_PATH = "data/zalando-hd-resized/test/"
+TRAIN_DATA_PATH = "data/zalando-hd-resized/train/"
 device = "mps"
 concat_d = -2
 dtype = torch.bfloat16 if device == "cuda" else torch.float16
