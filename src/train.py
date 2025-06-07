@@ -1,5 +1,6 @@
 import argparse
 import os
+from pathlib import Path
 
 from PIL import Image
 from tqdm import tqdm
@@ -10,7 +11,7 @@ from torchvision import transforms
 from diffusers import AutoencoderKL, UNet2DConditionModel, DDIMScheduler
 from transformers import SegformerImageProcessor, AutoModelForSemanticSegmentation
 
-from config import dtype, device, base_ckpt, TEST_DATA_PATH, concat_d
+from config import dtype, device, base_ckpt, TEST_DATA_PATH, concat_d, TRAIN_DATA_PATH
 from src.model.attention import Skip
 
 
@@ -25,9 +26,12 @@ def skip_cross_attentions(unet):
 def fine_tuned_modules(unet):
     trainable_modules = torch.nn.ModuleList()
     for blocks in [unet.down_blocks, unet.mid_block, unet.up_blocks]:
-        for block in blocks:
-            if hasattr(block, "attentions"):
-                trainable_modules.append(block.attentions[0])
+        if hasattr(blocks, "attentions"):
+            trainable_modules.append(blocks.attentions)
+        else:
+            for block in blocks:
+                if hasattr(block, "attentions"):
+                    trainable_modules.append(block.attentions)
     return trainable_modules
 
 
@@ -50,7 +54,9 @@ class ClothDataset(Dataset):
         filename = self.image_files[idx]
         image = Image.open(os.path.join(self.image_root, filename)).convert("RGB")
         cloth = Image.open(os.path.join(self.cloth_root, filename)).convert("RGB")
-        mask_image = Image.open(os.path.join(self.mask_root, filename)).convert("L")
+        mask_image = Image.open(
+            os.path.join(self.mask_root, f"{Path(filename).stem}_mask.png")
+        ).convert("L")
 
         image = image.resize((384, 512))
         cloth = cloth.resize((384, 512))
@@ -105,14 +111,14 @@ def train():
     )
 
     dataset = ClothDataset(
-        os.path.join(TEST_DATA_PATH, "image"),
-        os.path.join(TEST_DATA_PATH, "masks"),
-        os.path.join(TEST_DATA_PATH, "cloth"),
+        os.path.join(TRAIN_DATA_PATH, "image"),
+        os.path.join(TRAIN_DATA_PATH, "agnostic-mask"),
+        os.path.join(TRAIN_DATA_PATH, "cloth"),
         processor,
         mask_model,
         transform,
     )
-
+    print(len(dataset))
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
 
     for epoch in range(args.epochs):
@@ -123,7 +129,6 @@ def train():
             image = image.to(device, dtype=dtype)
             mask = mask.to(device, dtype)
             cloth = cloth.to(device, dtype)
-
             with torch.no_grad():
                 latent_image = (
                     vae.encode(image).latent_dist.sample() * vae.config.scaling_factor
@@ -160,6 +165,7 @@ def train():
             writer.add_scalar(
                 "Loss/train_step", loss.item(), epoch * len(dataloader) + i
             )
+            break
 
         writer.add_scalar("Loss/train_epoch", loss.item(), epoch)
 
@@ -177,7 +183,7 @@ def train():
                 ckpt_path,
             )
             print(f"Saved checkpoint: {ckpt_path}")
-
+        break
     writer.close()
     print("Training Complete")
 
