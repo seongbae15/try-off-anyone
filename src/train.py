@@ -155,7 +155,7 @@ def train():
             noisy_latent = noise_scheduler.add_noise(x_cm, noise, t)
             model_input = torch.cat([noisy_latent, m, x], dim=1)
             noise_pred = unet(model_input, t, return_dict=False)[0]
-            loss = torch.nn.functional.mase_loss(noise_pred, noise)
+            loss = torch.nn.functional.mse_loss(noise_pred, noise)
 
             optimizer.zero_grad()
             loss.backward()
