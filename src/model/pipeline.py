@@ -64,7 +64,7 @@ class TryOffAnyone:
         load_checkpoint_in_model(fine_tuned_modules(unet), "ckpt")
 
         self.unet = torch.compile(
-            unet, backend="aot_eager" if device == "mps" else "inductor"
+            unet, backend="aot_eager" if device == "cuda" else "cpu"
         )
         self.vae = torch.compile(vae, mode="reduce-overhead")
 
