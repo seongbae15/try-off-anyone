@@ -52,7 +52,6 @@ def prepare_image(image):
 
 
 def prepare_mask_image(mask_image):
-    # mask_image = mask_image.unsqueeze(0)s
     mask_image[mask_image < 0.5] = 0
     mask_image[mask_image >= 0.5] = 1
     return mask_image

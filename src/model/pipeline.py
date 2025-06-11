@@ -76,10 +76,25 @@ class TryOffAnyone:
     def __call__(self, image, mask, inference_steps, scale, height, width, generator):
 
         image = prepare_image(image).to(device, dtype=dtype)
+
+
+        print("mask shape:", mask.shape)
+        print("mask dtype:", mask.dtype)
+
         mask = prepare_mask_image(mask).to(device, dtype=dtype)
         masked_image = image * (mask < 0.5)
 
+        print("mask shape:", mask.shape)
+        print("mask dtype:", mask.dtype)
+        
+        print("masked_image shape:", masked_image.shape)
+        print("masked_image dtype:", masked_image.dtype)
+
         masked_latent = encode(masked_image, self.vae)
+
+        print("masked_latend 's shape : ", masked_latent.shape)
+        print("masked_latent.shape[-2:] : ", masked_latent.shape[-2:])
+
         image_latent = encode(image, self.vae)
         mask = torch.nn.functional.interpolate(
             mask, size=masked_latent.shape[-2:], mode="nearest"

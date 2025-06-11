@@ -76,21 +76,26 @@ def test_image():
     inputs.update({"image_embeddings": image_embeddings,})
 
     with torch.no_grad():
-        outputs = model(**inputs)
+        outputs = model(**inputs, multimask_ouput = False)
+    
     
     # mask = mask_processor.preprocess(outputs.numpy(), args.height, args.width)[0]
     masks = processor.image_processor.post_process_masks(
         outputs.pred_masks.cpu(), inputs["original_sizes"].cpu(), inputs["reshaped_input_sizes"].cpu()
     )
+    
+    # make mask_2D and mask_tensor
+    mask_2d = masks[0]
+    mask_2d = mask_2d[:, 1, :, :]
+
+    mask_tensor = (
+    mask_2d.float()
+          .to(device)
+    )
+
     cloth = vae_processor.preprocess(image, args.height, args.width)[0]
 
-    # bool ndarray → float tensor → [1,1,H,W]
-    mask_np     = masks[0]                           # (H, W), bool
-    mask_tensor = torch.from_numpy(mask_np.astype(np.float32))
-    mask_tensor = mask_tensor.unsqueeze(0).unsqueeze(0).to(device)
-    # → generate_laydown(pipeline, cloth_tensor, mask_tensor, args)
-
-    laydown_image = generate_laydown(pipeline, cloth, masks, args)
+    laydown_image = generate_laydown(pipeline, cloth, mask_tensor, args)
     laydown_image = background_whitening(
         background_removal(laydown_image), args.width, args.height
     )
