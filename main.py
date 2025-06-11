@@ -1,5 +1,5 @@
 # from src.test_vton import test_vton
-from src.inference import test_image
+from src.SAM_inference import test_image
 import argparse
 
 

@@ -30,6 +30,8 @@ def mask_generation(image, processor, model, category):
         align_corners=False,
     )
 
+
+    
     predicted_mask = upsampled_logits.argmax(dim=1).squeeze().cpu().numpy()
     if category == "Tops":
         predicted_mask_1 = predicted_mask == 4
@@ -50,7 +52,7 @@ def prepare_image(image):
 
 
 def prepare_mask_image(mask_image):
-    mask_image = mask_image.unsqueeze(0)
+    # mask_image = mask_image.unsqueeze(0)s
     mask_image[mask_image < 0.5] = 0
     mask_image[mask_image >= 0.5] = 1
     return mask_image
