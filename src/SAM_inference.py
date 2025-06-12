@@ -72,7 +72,6 @@ def test_image():
     image_embeddings = model.get_image_embeddings(inputs["pixel_values"])
 
     inputs.pop("pixel_values", None)
-
     inputs.update({"image_embeddings": image_embeddings,})
 
     with torch.no_grad():

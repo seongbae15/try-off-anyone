@@ -63,4 +63,4 @@ def test_image():
     laydown_image = background_whitening(
         background_removal(laydown_image), args.width, args.height
     )
-    laydown_image.save(os.path.join('data', f"{args.url.split('/')[-1][:-4]}.png"))
+    laydown_image.save(os.path.join('data', f"{args.url.split('/')[-1][:-4]}.webp"))
