@@ -48,11 +48,7 @@ class TryOffAnyone:
         self.noise_scheduler = DDIMScheduler.from_pretrained(
             base_ckpt, subfolder="scheduler"
         )
-        # self.noise_scheduler = DPMSolverMultistepScheduler.from_pretrained(
-        #     base_ckpt,
-        #     subfolder="scheduler",
-        # )
-        print(self.noise_scheduler)
+
         vae = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-mse").to(
             device, dtype=dtype
         )

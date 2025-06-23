@@ -183,8 +183,9 @@ data
 
 # Checkpoints
 ckpt
-ckpt_save
 *.ckpt
+*.pt
+*.safetensors
 stable-diffusion-v1-5
 
 # Log

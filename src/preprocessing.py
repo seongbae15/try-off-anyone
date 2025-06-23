@@ -6,20 +6,23 @@ import torch
 
 
 def background_whitening(image, w, h):
-    background = Image.new('RGBA', (w, h), (255, 255, 255))
+    background = Image.new("RGBA", (w, h), (255, 255, 255))
     background.paste(image, (0, 0), mask=image)
     return background
 
 
 def background_removal(image):
     pipe = pipeline(
-        "image-segmentation", model="briaai/RMBG-1.4", trust_remote_code=True, device=device
+        "image-segmentation",
+        model="briaai/RMBG-1.4",
+        trust_remote_code=True,
+        device=device,
     )
     return pipe(image)
 
 
 def mask_generation(image, processor, model, category):
-    inputs = processor(images=image, return_tensors="pt").to(device if device == 'cuda' else 'cpu')
+    inputs = processor(images=image, return_tensors="pt").to(device)
     outputs = model(**inputs)
     logits = outputs.logits.cpu()
 
